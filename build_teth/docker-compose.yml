@@ -1,0 +1,57 @@
+# Use root/example as user/password credentials
+version: '3.1'
+
+# TODO: ADD PACKET ANALYZER
+services:
+  db:
+    image: library/mysql:latest
+    ports:
+      - "3306:3306"
+    command: --init-file /data/application/init.sql
+    volumes:
+      - ./init.sql:/data/application/init.sql
+      #TODO: LOCATE SQL FILE
+      - ./<SQL FILE>:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_USER: teth_user
+      MYSQL_PASSWORD: teth_password
+
+  patch_server:
+    build:
+      context: ../
+      dockerfile: ./patch_server/Dockerfile
+      target: patch_server
+    ports:
+      - 11000:11000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  login_server:
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+      target: login_server
+    ports:
+      - 11000:11000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      patch_server:
+        condition: service_healthy
+
+  ship_server:
+    build:
+      context: ../
+      dockerfile: ./ship_server/Dockerfile
+      target: ship_server
+    ports:
+      - 11000:11000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      patch_server:
+        condition: service_healthy
+      login_server:
+        condition: service_healthy
