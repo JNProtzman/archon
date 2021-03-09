@@ -85,10 +85,7 @@ func initParameterData() error {
 			initErr = fmt.Errorf("failed to load PlyLevelTbl.prs:" + err.Error())
 			return
 		}
-
-		decompressedStatsFile := make([]byte, prs.DecompressSize(compressedStatsFile))
-		prs.Decompress(compressedStatsFile, decompressedStatsFile)
-
+		decompressedStatsFile := prs.Decompress(compressedStatsFile)
 		// Base character class stats are stored sequentially, each 14 bytes long.
 		for i := 0; i < NumCharacterClasses; i++ {
 			internal.StructFromBytes(decompressedStatsFile[i*14:], &BaseStats[i])
